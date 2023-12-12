@@ -5,15 +5,20 @@
 #include <UIPAgentuino.h> 
 #include <OneWire.h>
 
+/*
+Данный код забирает температуру с датчика DS18B20 и отдает ее потом через протокол SNMP, используя библиотеку UIPEthernet и UIPAgentuino
+Еhis code takes the temperature from the DS18B20 sensor and then sends it via the SNMP protocol using the UIPEthernet and UIPAgentuino library
+Dieser Code erfasst die Temperatur vom DS18B20-Sensor und sendet sie dann über das SNMP-Protokoll unter Verwendung der UIPEthernet- und UIPAgentuino-Bibliothek
 
-#define ONE_WIRE_BUS 6
+*/
+#define ONE_WIRE_BUS 6 //Пин датчика DS18B20
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-static byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-static byte ip[] = { 10, 222, 128, 251 };
+static byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };//Мак шилда
+static byte ip[] = { 10, 222, 128, 251 };//Адрес шилда
 
 
 static char sysDescr[]       = "1.3.6.1.2.1.1.1.0";  // read-only  (DisplayString)
@@ -58,8 +63,7 @@ void RequestDallas18b20()
 {
 unsigned long timing=0;
       while (!sensors.isConversionComplete()) {
-     // Serial.print("*");// ����� ��������� �������� ��������
-        if (millis() - timing > 10000){ // ������ 10000 ���������� ������ ��� �������� ����� 
+        if (millis() - timing > 10000){ // Цикл ничем не занят просто ждем пока изготовятся результаты, целесообразность данного куска кода сомнительна.
           timing = millis(); 
          // Serial.println (timing);
         }
@@ -75,10 +79,8 @@ unsigned long timing=0;
 
 void pduReceived()
 {
-    
- //   Serial.print("*PDU*");
-    
-//         end recieve
+  //Implementation SNMP   
+
   SNMP_PDU pdu;
   api_status = Agentuino.requestPdu(&pdu);
   //Serial.println(oid);
@@ -220,7 +222,7 @@ void setup()
 {
   Serial.begin(115200);
   
-  //ds.search(addr);
+
   sensors.begin();
   sensors.requestTemperatures();
   sensors.setWaitForConversion(false);
@@ -250,11 +252,11 @@ void loop()
   // sysUpTime - The time (in hundredths of a second) since
   // the network management portion of the system was last
   // re-initialized.
-  if (millis() - prevMillis > 60000){ // ������ 10000 ���������� ������ ��� �������� ����� 
+  if (millis() - prevMillis > 60000){ // Код выполняется раз в минуту
           prevMillis = millis(); 
-          RequestDallas18b20();
+          RequestDallas18b20(); //Опрос датчика температуры Dallas18b20
     // increment up-time counter
-          locUpTime += 6000;  
+          locUpTime += 6000;   // Обновление timeTick
           if (locUpTime>1299250100){locUpTime=0;}
         }
   
